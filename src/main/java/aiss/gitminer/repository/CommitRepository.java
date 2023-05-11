@@ -1,4 +1,7 @@
 package aiss.gitminer.repository;
 
-public class CommitRepository {
+import aiss.gitminer.model.Commit;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CommitRepository extends JpaRepository<Commit,Long> {
 }
