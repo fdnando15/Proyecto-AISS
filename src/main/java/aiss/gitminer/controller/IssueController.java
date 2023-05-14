@@ -21,31 +21,34 @@ import java.util.Optional;
 
 @Tag(name = "Issue", description = "Issue management API")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/gitminer")
 public class IssueController {
     @Autowired
     IssueRepository issueRepository;
-    @Autowired
-    ProjectRepository projectRepository;
 
     @Operation(
-            summary = "Get issues by project",
-            description = "Retrieve all the issues from a specified project",
+            summary = "Get all stored issues ",
+            description = "Retrieve all the issues",
             tags = {"issues", "get"}
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of issues from the specified project",
-                    content = {@Content(schema = @Schema(implementation = Comment.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "404", description = "Could not find the project from which retrieve its issues",
+            @ApiResponse(responseCode = "200", description = "List of issues",
+                    content = {@Content(schema = @Schema(implementation = Issue[].class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404", description = "Could not find all the issues",
                     content = {@Content(schema = @Schema())})
     })
-    @GetMapping("/projects/{projectId}/issues")
-    public List<Issue> findAllIssuesFromRepo(@PathVariable(value = "project id") Long projectId) throws ProjectNotFoundException {
-        Optional<Project> project = projectRepository.findById(projectId.toString());
-        if(project.isPresent()){
-            throw new ProjectNotFoundException();
+    @GetMapping("/issues")
+    public List<Issue> findAllIssuesFromRepo(@RequestParam(required = false) String authorId,
+                                             @RequestParam(required = false) String state) {
+        if (authorId == null && state == null) {
+            return issueRepository.findAll();
+        } else if(authorId!=null && state==null) {
+            return issueRepository.findByAuthorId(authorId);
+        } else if(authorId == null && state != null){
+            return issueRepository.findByState(state);
+        } else {
+            return issueRepository.findByAuthorIdAndState(authorId, state);
         }
-        return project.get().getIssues();
     }
 
     @Operation(
@@ -55,33 +58,17 @@ public class IssueController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Issue with the specified Id",
-                    content = {@Content(schema = @Schema(implementation = Comment.class), mediaType = "application/json")}),
+                    content = {@Content(schema = @Schema(implementation = Issue.class), mediaType = "application/json")}),
             @ApiResponse(responseCode = "404", description = "Could not find the issue",
                     content = {@Content(schema = @Schema())})
     })
     @GetMapping("/issues/{issueId}")
-    public Issue findOne(@PathVariable(value = "id") Long id) throws IssueNotFoundException {
+    public Issue findOne(@PathVariable(value = "issueId") Long id) throws IssueNotFoundException {
         Optional<Issue> issue = issueRepository.findById(id.toString());
         if(!issue.isPresent()){
             throw new IssueNotFoundException();
         }
         return issue.get();
-    }
-
-    @Operation(
-            summary = "Get issues by state",
-            description = "Retrieve all the issues with a specific state",
-            tags = {"issues", "get", "state"}
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of all the issues with the specified Id",
-                    content = {@Content(schema = @Schema(implementation = Comment.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "404", description = "Could not find the issues", content = {@Content(schema = @Schema())})
-    })
-    @GetMapping("/issues")
-    public List<Issue> findByState(@RequestParam(required = true) String state){
-        List<Issue> issues = issueRepository.findByState(state);
-        return issues;
     }
 
 }

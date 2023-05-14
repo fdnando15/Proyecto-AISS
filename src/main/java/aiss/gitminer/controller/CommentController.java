@@ -25,14 +25,13 @@ import java.util.Optional;
 
 @Tag(name= "Comment", description = "Comment management API")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/gitminer")
 public class CommentController {
     @Autowired
     CommentRepository commentRepository;
     @Autowired
     IssueRepository issueRepository;
-    @Autowired
-    UserRepository userRepository;
+
 
     @Operation(
             summary = "Get comments from an issue",
@@ -41,11 +40,11 @@ public class CommentController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of comments from the specified issue",
-                    content = {@Content(schema = @Schema(implementation = Comment.class), mediaType = "application/json")}),
+                    content = {@Content(schema = @Schema(implementation = Comment[].class), mediaType = "application/json")}),
             @ApiResponse(responseCode = "404", description = "Could not find the issue from which retrieve its comments",
                     content = {@Content(schema = @Schema())})
     })
-    @GetMapping("/issue/{issueId}/comments")
+    @GetMapping("/issues/{issueId}/comments")
     public List<Comment> findAllCommentsFromIssue(@PathVariable(value = "issueId") Long issueId) throws IssueNotFoundException {
         Optional<Issue> issue = issueRepository.findById(issueId.toString());
         if(!issue.isPresent()){
@@ -54,6 +53,21 @@ public class CommentController {
         return issue.get().getComments();
     }
 
+    @Operation(
+            summary = "Get all comments",
+            description = "Retrieve all the stored comments",
+            tags = {"comment", "get"}
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of comments",
+                    content = {@Content(schema = @Schema(implementation = Comment[].class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "404", description = "Could not find the comments",
+                    content = {@Content(schema = @Schema())})
+    })
+    @GetMapping("/comments")
+    public List<Comment> findAllComments()  {
+        return commentRepository.findAll();
+    }
     @Operation(
             summary = "Get a single comments",
             description = "Retrieve a single comment specifying its Id",
@@ -74,25 +88,4 @@ public class CommentController {
         return comment.get();
     }
 
-        @Operation(
-                summary = "Get comments by author",
-                description = "Retrieve all the comments from a specified User",
-                tags = {"comment", "get"}
-        )
-        @ApiResponses({
-                @ApiResponse(responseCode = "200", description = "List of comments from the specified user",
-                        content = {@Content(schema = @Schema(implementation = Comment.class), mediaType = "application/json")}),
-                @ApiResponse(responseCode = "404", description = "Could not find the User from which retrieve its comments",
-                        content = {@Content(schema = @Schema())})
-        })
-    @GetMapping("/user/{userId}/comments")
-    public List<Comment> findByAuthor(@PathVariable(value = "userId") Long id) throws UserNotFoundException {
-        // TODO: revisar este método (mirar si el .findByAuthor devuelve una lista)
-        Optional<User> author = userRepository.findById(id.toString());
-        if(!author.isPresent()){
-            throw new UserNotFoundException();
-        }
-        List<Comment> comment = commentRepository.findByAuthor(author.get());
-        return comment;
-    }
 }

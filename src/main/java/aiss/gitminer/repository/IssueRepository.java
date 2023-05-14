@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface IssueRepository extends JpaRepository<Issue,String> {
-    List<Issue> findByState(String name);
+    List<Issue> findByState(String state);
+    List<Issue> findByAuthorId(String authorId);
+    List<Issue> findByAuthorIdAndState(String authorId, String state);
 }
